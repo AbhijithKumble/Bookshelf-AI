@@ -1,6 +1,0 @@
-{
-	"dependencies": {
-		"@google/genai": "^1.16.0",
-		"multer": "^2.0.2"
-	}
-}

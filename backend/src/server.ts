@@ -1,7 +1,5 @@
 import app from "./app.ts";
 import dotenv from "dotenv";
-import { GoogleGenAI, createUserContent, createPartFromUri } from "@google/genai";
-import fs from "fs";
 
 dotenv.config({ debug: true })
 

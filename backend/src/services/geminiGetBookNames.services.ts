@@ -1,11 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
-import fs from "fs";
+import safeParseJSON from "../utils/verifyJSONParsable.ts";
 
-async function getBookNamesFromImage(imgPath: string) {
+async function getBookNamesFromImage(file: Express.Multer.File) {
 
-  const imageBase64 = fs.readFileSync(imgPath, {
-    encoding: "base64",
-  });
+  const imageBase64 = file.buffer.toString('base64');
 
   const ai = new GoogleGenAI({});
 
@@ -24,17 +22,31 @@ async function getBookNamesFromImage(imgPath: string) {
                 data: imageBase64,
               },
             },
-            { text: `Give me all the names of the books in the given image in the form of json with key as books and value as a list of books ` },
+            {
+              text: `Get the books names from the given image and 
+                      Return ONLY a valid JSON object in this format:
+                      { "books": ["title1", "title2", "title3"] }
+                      - No authors
+                      - No extra text or explanation
+                      - No markdown or code block
+                  `
+            },
           ],
         },
       ],
     });
-    
-    return response.text;
 
+    // TODO: error handling and output of the error 
+      
+    if (!response) {
+      return new Error("could not get the output from ML model");
+    }
+
+    const jsonData = safeParseJSON(response.text!);
+    return jsonData;
   } catch (error) {
     console.log(error)
-    return {};
+    return error;
   }
 }
 
