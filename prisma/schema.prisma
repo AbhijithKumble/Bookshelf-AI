@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  clerkId     String  @id 
+  role        ROLE  @default(USER) 
+  bookImages  BookImage[]
+  booksData   BookData[]
+}
+
+model BookName {
+  id      Int         @id @default(autoincrement())
+  title   String
+  author  String
+  images  BookImageBook[] // links to images through the join table
+}
+
+model BookImage {
+  imgId     Int       @id @default(autoincrement())
+  imgPath   String
+  createdAt DateTime  @default(now())
+  userId    String
+  user      User      @relation(fields: [userId], references: [clerkId])
+  books     BookImageBook[] // links to books through the join table
+}
+
+model BookImageBook {
+  bookId      Int
+  bookImageId Int
+
+  book       BookName  @relation(fields: [bookId], references: [id])
+  bookImage  BookImage @relation(fields: [bookImageId], references: [imgId])
+
+  @@id([bookId, bookImageId])
+}
+
+// good reads data is stored 
+model BookData {
+  uniqueId            Int     @id @default(autoincrement()) 
+  bookId              Int      
+  title               String   
+  author              String
+  additionalAuthors   String
+  myRating            Float   @default(0.0)
+  status              String 
+
+  userId              String
+  user                User    @relation(fields: [userId], references: [clerkId])
+
+  @@unique([userId, bookId])
+}
+
+enum ROLE {
+  USER
+  ADMIN
+}
+

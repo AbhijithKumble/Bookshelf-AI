@@ -1,0 +1,14 @@
+-- CreateTable
+CREATE TABLE "User" (
+    "clerkId" TEXT NOT NULL PRIMARY KEY,
+    "role" TEXT NOT NULL DEFAULT 'USER'
+);
+
+-- CreateTable
+CREATE TABLE "BookImage" (
+    "imgId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "imgPath" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" TEXT NOT NULL,
+    CONSTRAINT "BookImage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("clerkId") ON DELETE RESTRICT ON UPDATE CASCADE
+);
