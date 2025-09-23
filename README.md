@@ -96,26 +96,6 @@ Receive personalized book recommendations similar to the books you already love 
    
    Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
 
-## 📁 Project Structure
-
-```
-bookshelf-ai/
-├── app/                    # Next.js 14 app directory
-│   ├── (auth)/            # Authentication pages
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
-├── components/            # Reusable components
-├── lib/                   # Utility functions
-├── mockups/              # Design mockups and screenshots
-├── public/               # Static assets
-├── .env.example          # Environment variables example
-├── next.config.js        # Next.js configuration
-├── package.json          # Dependencies
-├── tailwind.config.js    # Tailwind CSS configuration
-└── README.md            # This file
-```
-
 ## 🔧 Configuration
 
 ### Clerk Authentication
@@ -161,28 +141,3 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-If you have any questions or need help:
-
-- 📧 Email: support@bookshelf-ai.com
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/bookshelf-ai/issues)
-- 💬 Discord: [Join our community](https://discord.gg/bookshelf-ai)
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org) for the amazing framework
-- [Clerk](https://clerk.com) for authentication
-- [Tailwind CSS](https://tailwindcss.com) for styling
-- [Vercel](https://vercel.com) for hosting and fonts
-
----
-
-**Made with ❤️ for book lovers everywhere**
-
-*BookShelf AI - Making book discovery smarter, one photo at a time.*
