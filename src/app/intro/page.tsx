@@ -1,6 +1,6 @@
 "use client";
 
-import { SignedOut, SignUpButton, useUser } from "@clerk/nextjs";
+import { SignUpButton, useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { useEffect } from "react";
 
@@ -32,8 +32,7 @@ export default function IntroPage() {
   }
 
   return (
-    <SignedOut>
-      <main className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <main className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
         <nav className="bg-white shadow-sm">
           <div className="max-w-6xl mx-auto px-4 py-4">
             <h1 className="text-2xl font-bold text-gray-800">📚 BookShelf AI</h1>
@@ -141,7 +140,6 @@ export default function IntroPage() {
             <p>&copy; 2025 BookShelf AI. Making book discovery smarter, one photo at a time.</p>
           </div>
         </footer>
-      </main>
-    </SignedOut>
+    </main>
   );
 }
