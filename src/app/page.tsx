@@ -20,9 +20,9 @@ export default async function HomePage() {
             </div>
             <div className="flex items-center space-x-4">
               {/* User Button shows profile picture and dropdown */}
-              <UserButton afterSignOutUrl="/intro" />
+              <UserButton />
               {/* Alternative: Simple Sign Out Button */}
-              <SignOutButton redirectUrl="/intro">
+              <SignOutButton>
                 <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                   Sign Out
                 </button>
