@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const timestamp = Date.now();
     const blobFileName = `user_${userId}-${timestamp}-${file.name}`;
     const blob = await put(blobFileName, buffer, {
-      access: "public",
+      access: "private",
       contentType: file.type,
     });
 
