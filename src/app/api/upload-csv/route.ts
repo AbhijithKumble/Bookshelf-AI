@@ -1,7 +1,5 @@
 import { getAuth } from "@clerk/nextjs/server";
-import { writeFile } from "fs";
 import { NextResponse, NextRequest } from "next/server";
-import path from "path";
 import * as csv from "csv-parse/sync";
 import { toBookData } from "@/utils/csvtobookinterface";
 import { BookData } from "@/types/books";
@@ -16,51 +14,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: false,
       status: 401,
-      message: "Unauthorized access"
+      message: "Unauthorized access",
     });
   }
 
   const data = await req.formData();
-
   const file = data.get("file") as File;
 
   if (!file) {
     return NextResponse.json({
       success: false,
       status: 400,
-      message: "file upload failed"
+      message: "file upload failed",
     });
   }
 
-  // Convert file → Buffer
+  // Convert file → Buffer (in-memory only — no filesystem write needed)
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-
-  //  Save file to backend
-  const uploadDir = path.join(process.cwd(), "uploads");
-  const filePath = path.join(uploadDir, file.name);
-  writeFile(filePath, buffer, (err) => {
-    // console.log(`file cannot be wriiten ${err}`)
-  });
 
   // Parse CSV
   const csvText = buffer.toString("utf-8");
   const records = csv.parse(csvText, { columns: true, skip_empty_lines: true });
   const books: BookData[] = records.map(toBookData);
 
-  const userPresent = await prisma.user.findUnique({
-    where: {
-      clerkId: userId
-    }
+  // Ensure user exists
+  await prisma.user.upsert({
+    where: { clerkId: userId },
+    update: {},
+    create: { clerkId: userId },
   });
 
-  if (!userPresent) {
-    await prisma.user.create({
-      data: {
-        clerkId: userId
-      }
-    });
-  }
+  // Delete existing book data for this user before inserting fresh data
+  // so re-uploading a new CSV always reflects the latest Goodreads export
+  await prisma.bookData.deleteMany({
+    where: { userId },
+  });
 
   await prisma.bookData.createMany({
     data: books.map((b) => ({
@@ -70,14 +59,14 @@ export async function POST(req: NextRequest) {
       additionalAuthors: b.additionalAuthors,
       myRating: b.myRating,
       status: b.status,
-      userId: userId, // foreign key
+      userId: userId,
     })),
+    skipDuplicates: true,
   });
 
   return NextResponse.json({
     success: true,
     status: 200,
-    message: "csv file upload successfull"
-  })
-
+    message: "csv file upload successful",
+  });
 }

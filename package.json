@@ -12,6 +12,7 @@
     "@clerk/nextjs": "^6.32.0",
     "@google/genai": "^1.20.0",
     "@prisma/client": "^6.16.2",
+    "@vercel/blob": "^2.8.0",
     "csv": "^6.4.1",
     "csv-parse": "^6.1.0",
     "framer-motion": "^12.23.16",

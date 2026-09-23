@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuth } from "@clerk/nextjs/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 import { PrismaClient } from "@/generated/prisma";
 import { getBookNamesFromLLM } from "@/utils/getBookNamesFromLLM";
 
@@ -9,53 +8,50 @@ const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {
-    //Check if user is authenticated
+    // Check if user is authenticated
     const { userId } = getAuth(req);
     if (!userId) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    //Get file from formData
+    // Get file from formData
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     if (!file) {
       return NextResponse.json({ success: false, message: "No file uploaded" }, { status: 400 });
     }
 
-    //Convert file → Buffer
+    // Convert file → Buffer
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    //Generate unique file name
+    // Upload to Vercel Blob (persistent, CDN-backed storage)
     const timestamp = Date.now();
-    const fileName = `${userId}-${timestamp}-${file.name}`;
-    const uploadDir = path.join(process.cwd(), "public/uploads");
-    const filePath = path.join(uploadDir, fileName);
+    const blobFileName = `user_${userId}-${timestamp}-${file.name}`;
+    const blob = await put(blobFileName, buffer, {
+      access: "public",
+      contentType: file.type,
+    });
 
-    //Ensure upload directory exists
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(filePath, buffer);
-
-    //Ensure user exists
+    // Ensure user exists
     await prisma.user.upsert({
       where: { clerkId: userId },
       update: {},
       create: { clerkId: userId },
     });
 
-    //Get book names from LLM
-    const jsonArray = await getBookNamesFromLLM(filePath);
+    // Get book names from LLM — pass buffer directly, no disk read needed
+    const jsonArray = await getBookNamesFromLLM(buffer, file.type);
 
-    //Create the image once
+    // Create the image record with the blob URL
     const imageRecord = await prisma.bookImage.create({
       data: {
-        imgPath: `/uploads/${fileName}`,
+        imgPath: blob.url,
         userId: userId,
       },
     });
 
-    //For each book, create/find book, then link image
+    // For each book, find or create book record, then link to image
     for (const book of jsonArray) {
-      //Use findFirst instead of upsert if title is not unique
       let bookRecord = await prisma.bookName.findFirst({
         where: {
           title: book.BookName,
@@ -72,7 +68,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      //Link the image to the book via the join table
+      // Link the image to the book via the join table
       await prisma.bookImageBook.create({
         data: {
           bookId: bookRecord.id,
@@ -85,11 +81,10 @@ export async function POST(req: NextRequest) {
       { success: true, message: "Books and image saved successfully" },
       { status: 200 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json(
-      { success: false, error: err.message },
+      { success: false, error: (err as Error).message },
       { status: 500 }
     );
   }
 }
-

@@ -8,8 +8,12 @@ export default function SimilarBooks() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const isFetchingRef = (globalThis as any).__rec_fetching_ref__ || { current: false };
-  ;(globalThis as any).__rec_fetching_ref__ = isFetchingRef;
+
+  // Use a ref on globalThis to prevent duplicate fetches across StrictMode remounts
+  type GlobalWithFetchRef = typeof globalThis & { __rec_fetching_ref__?: { current: boolean } };
+  const g = globalThis as GlobalWithFetchRef;
+  if (!g.__rec_fetching_ref__) g.__rec_fetching_ref__ = { current: false };
+  const isFetchingRef = g.__rec_fetching_ref__;
 
   useEffect(() => {
     async function fetchBooks() {
@@ -20,8 +24,8 @@ export default function SimilarBooks() {
         setLoading(true);
         const recommended = await getUserPreferenceBooks();
         setBooks(recommended);
-      } catch (e: any) {
-        const msg = e?.message || "Failed to fetch recommendations";
+      } catch (e: unknown) {
+        const msg = (e as Error)?.message || "Failed to fetch recommendations";
         setError(msg);
         toast.error(msg);
       } finally {
@@ -30,6 +34,7 @@ export default function SimilarBooks() {
       }
     }
     fetchBooks();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {

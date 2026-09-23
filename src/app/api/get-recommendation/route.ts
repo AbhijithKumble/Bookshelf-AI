@@ -6,12 +6,6 @@ import { GoogleGenAI, Type } from "@google/genai";
 const prisma = new PrismaClient();
 const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Simple in-memory cache per user, keyed by userId
-type RecommendationPayload = { recommendations: any[]; sourceImageId: number | null };
-type CacheEntry = { ts: number; imageId: number | null; historySig: string; data: RecommendationPayload };
-const recommendationCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
 export async function GET(req: NextRequest) {
   try {
     const { userId } = getAuth(req);
@@ -25,8 +19,6 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       include: { books: { include: { book: true } } },
     });
-
-    // (cache check moved below after we compute historySig)
 
     const booksFromLatestImage = (latestImage?.books || []).map((b) => ({
       title: b.book.title,
@@ -49,21 +41,6 @@ export async function GET(req: NextRequest) {
       .filter((b) => (b.status || "").toLowerCase() === "read" || (b.myRating ?? 0) > 0)
       .map((b) => `${b.title} by ${b.author} (rating: ${b.myRating ?? 0})`);
 
-    // Simple history signature to invalidate cache when Goodreads data changes materially
-    const historySig = `${userBooksData.length}`;
-
-    // Try cache: reuse when latest image is unchanged, history unchanged, and entry is fresh
-    const cacheKey = userId;
-    const cached = recommendationCache.get(cacheKey);
-    if (
-      cached &&
-      cached.imageId === (latestImage?.imgId ?? null) &&
-      cached.historySig === historySig &&
-      Date.now() - cached.ts < CACHE_TTL_MS
-    ) {
-      return NextResponse.json(cached.data);
-    }
-
     // Build Gemini contents
     const prompt = `You are a book recommendation expert. Given the user's Goodreads history and the books detected in the user's latest uploaded bookshelf image, evaluate interest for each detected book.`;
 
@@ -76,7 +53,7 @@ export async function GET(req: NextRequest) {
         text: `User Goodreads structured history JSON (use exact titles from here for matching):\n${JSON.stringify(
           userBooksData
             .slice(0, 300)
-            .map((b) => ({ title: b.title, author: b.author, rating: b.myRating ?? 0, status: (b.status || '').toLowerCase() })),
+            .map((b) => ({ title: b.title, author: b.author, rating: b.myRating ?? 0, status: (b.status || "").toLowerCase() }))
         )}`,
       },
       {
@@ -112,24 +89,13 @@ export async function GET(req: NextRequest) {
     });
 
     const recommendations = JSON.parse(aiResponse.text || "[]");
-    // console.log(recommendations);
-    const payload: RecommendationPayload = {
+    const payload = {
       recommendations,
       sourceImageId: latestImage?.imgId || null,
     };
 
-    // Store in cache
-    recommendationCache.set(cacheKey, {
-      ts: Date.now(),
-      imageId: latestImage?.imgId ?? null,
-      historySig,
-      data: payload,
-    });
-
     return NextResponse.json(payload);
-  } catch (err: any) {
-    // console.error(err);
-    return NextResponse.json({ error: err.message || "Server error" }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err as Error).message || "Server error" }, { status: 500 });
   }
 }
-

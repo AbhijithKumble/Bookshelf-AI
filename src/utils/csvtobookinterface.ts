@@ -1,12 +1,13 @@
 import { BookData } from "../types/books";
 
-export function toBookData(row: any): BookData {
+export function toBookData(row: unknown): BookData {
+  const r = row as Record<string, string>;
   return {
-    bookId: Number(row["Book Id"]),
-    title: row["Title"],
-    author: row["Author"],
-    additionalAuthors: row["Additional Authors"] || "",
-    myRating: Number(row["My Rating"]),
-    status: row["Exclusive Shelf"], // "read" | "to-read" | "currently-reading"
+    bookId: Number(r["Book Id"]),
+    title: r["Title"],
+    author: r["Author"],
+    additionalAuthors: r["Additional Authors"] || "",
+    myRating: Number(r["My Rating"]),
+    status: r["Exclusive Shelf"], // "read" | "to-read" | "currently-reading"
   };
 }

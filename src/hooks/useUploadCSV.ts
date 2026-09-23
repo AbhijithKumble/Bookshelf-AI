@@ -43,9 +43,9 @@ export function useUploadCSV() {
       toast.success("CSV Upload successful!");
       setOpen(false);
       setFile(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // console.error(err);
-      toast.error(err?.message || "Upload failed, please try again.");
+      toast.error((err as Error)?.message || "Upload failed, please try again.");
     } finally {
       setLoading(false);
     }

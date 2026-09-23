@@ -30,8 +30,8 @@ export async function getUserPreferenceBooks(): Promise<Book[]> {
     // Update cache
     cacheEntry = { ts: Date.now(), data: result };
     return result;
-  } catch (err) {
-    // console.error("Error fetching user preference books:", err);
+  } catch (_err) {
+    // console.error("Error fetching user preference books:", _err);
     return [];
   }
 }

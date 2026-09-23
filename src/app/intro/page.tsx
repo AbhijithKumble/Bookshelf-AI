@@ -1,6 +1,6 @@
 "use client";
 
-import { RedirectToSignIn, SignedIn, SignedOut, SignUpButton, useUser } from "@clerk/nextjs";
+import { SignedOut, SignUpButton, useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { useEffect } from "react";
 
